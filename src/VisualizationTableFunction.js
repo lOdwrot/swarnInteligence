@@ -16,7 +16,7 @@ export default class VisualizationTable extends Component {
   constructor(props) {
     super(props)
 
-    this.state = {furnitures: [], score: 0, selectedAlghoritm: 'pso', swarm: []}
+    this.state = {furnitures: [], score: 0, selectedAlghoritm: 'pso', swarm: [], swarmSize: 10}
     this.alghorith = new PSO()
 
     this.updateSwarmData = this.updateSwarmData.bind(this)
@@ -134,8 +134,10 @@ export default class VisualizationTable extends Component {
                   <MenuItem value={'fireFly'}>Fire Fly</MenuItem>
                   <MenuItem value={'bee'}>Bee</MenuItem>
                 </Select>
+                <input type='number' onChange={(event)=> this.setState({swarmSize: Number(event.target.value)})} value={Number(this.state.swarmSize)}/>
+                <button onClick={() => console.log(this.state.swarm)}>Log swarm</button>
                 <button onClick={() => {
-                  this.alghorith.start(this.state.furnitures.length * 2, [0, TableData.roomDimmensions[0]])
+                  this.alghorith.start(this.state.furnitures.length * 2, [0, TableData.roomDimmensions[0]], TableData.roomFunction, this.state.swarmSize)
                   this.updateSwarmData()
                 }}>
                   Start Alghoritm
@@ -152,14 +154,13 @@ export default class VisualizationTable extends Component {
                 key={index}
                 onClick={() => {
                   console.log(v)
-                  this.updateFurnituresState(this.state.furnitures, v)
+                  this.updateFurnituresState(this.state.furnitures, v.args)
                 }}>
                 Unit: {' ' + index}
               </button>
             ))
           }
         </div>
-
       </div>
     )
   }

@@ -35,7 +35,6 @@ class App extends Component {
           this.state.selectedView == '3dFunction' &&
           <Visualization3DFunction
             visFun={mTestFun}
-            agents={[{x: 2, y:2, z: mTestFun(2, 2)}, {x: -2, y: 1.43, z: mTestFun(-2, 1.43)}]}
           />
         }
         {this.state.selectedView == 'room' && <VisualizationTableFunction/>}

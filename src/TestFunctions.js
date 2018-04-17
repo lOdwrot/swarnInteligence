@@ -1,8 +1,18 @@
-export const ackleyFunction  = (a = 20, b = 0.2, c = 2 * Math.PI, d = 2) => (x, y) => -a * Math.exp(
-    -b * Math.sqrt(1/d * (Math.pow(x, 2) + Math.pow(y, 2)))
-  ) - Math.exp(
-    1/d + (Math.cos(c*x) + Math.cos(c*y))
-  ) + a + Math.exp(1)
+export const ackleyFunction  = (a = 20, b = 0.2, c = 2 * Math.PI, d = 2) => (x, y) => {
+  let arg1, arg2
+  if(Array.isArray(x)) {
+    arg1 = x[0]
+    arg2 = x[1]
+  } else {
+    arg1 = x
+    arg2 = y
+  }
+  return -a * Math.exp(
+      -b * Math.sqrt(1/d * (Math.pow(arg1, 2) + Math.pow(arg2, 2)))
+    ) - Math.exp(
+      1/d + (Math.cos(c*arg1) + Math.cos(c*arg2))
+    ) + a + Math.exp(1)
+}
 
 
 export const FT_SOFA = 'sofa'

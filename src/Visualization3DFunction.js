@@ -8,7 +8,10 @@ import {
   FormHelperText,
 } from 'material-ui/Form'
 import Checkbox from 'material-ui/Checkbox'
-
+import Input, { InputLabel } from 'material-ui/Input';
+import { MenuItem } from 'material-ui/Menu';
+import Select from 'material-ui/Select';
+import PSO from './Algorithms/Pso.js'
 import Plot from 'react-plotly.js'
 
 const halfSquara = 5
@@ -20,7 +23,12 @@ class Visualization extends Component {
     let surface = this.generateSurface()
     let maxZ = Math.max.apply(Math, _.flatten(surface.z))
 
-    this.state = {surface: this.generateSurface(), maxZ: maxZ, showSurface: true, showTopPoints: true, show3dPoints: true}
+    this.alghorithm = new PSO()
+    this.state = {surface: this.generateSurface(), maxZ: maxZ, showSurface: true, showTopPoints: true, show3dPoints: true, selectedAlghoritm: 'pso', swarm: [], swarmSize: 10}
+  }
+
+  updateSwarmData() {
+    this.setState({swarm: this.alghorithm.getSwarm()})
   }
 
   handleChecboxChange = property => event => {
@@ -30,6 +38,9 @@ class Visualization extends Component {
   render() {
     return (
       <div style={{display: 'flex'}}>
+        <div style={{maxWitdh: '300px'}}>
+          {this.renderSwarmSection()}
+        </div>
         <div>
           {this.renderSurfacePanel()}
         </div>
@@ -40,11 +51,58 @@ class Visualization extends Component {
     )
   }
 
+  renderSwarmSection() {
+    return (
+      <div>
+        <div>
+          <div>
+            <FormControl style={{width: '200px'}}>
+              <InputLabel htmlFor="age-native-simple">Swarm type</InputLabel>
+              <Select
+                value={this.state.selectedAlghoritm}
+                onChange={(event) => this.setState({selectedAlghoritm: event.target.value})}
+                input={<Input name="age" id="age-helper" />}
+                >
+                  <MenuItem value={'pso'}>PSO</MenuItem>
+                  <MenuItem value={'fireFly'}>Fire Fly</MenuItem>
+                  <MenuItem value={'bee'}>Bee</MenuItem>
+                </Select>
+                <input type='number' onChange={(event)=> this.setState({swarmSize: Number(event.target.value)})} value={Number(this.state.swarmSize)}/>
+                <button onClick={() => console.log(this.state.swarm)}>Log swarm</button>
+                <button onClick={() => {
+                  this.alghorithm.start(2, [-5, 5], this.props.visFun, this.state.swarmSize)
+                  this.updateSwarmData()
+                }}>
+                  Start Alghoritm
+                </button>
+                <button onClick={this.updateSwarmData}>
+                  Update swarm data
+                </button>
+            </FormControl>
+          </div>
+          {
+            !_.isEmpty(this.state.swarm) &&
+            this.state.swarm.map((v, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  console.log(v)
+                  this.updateSwarmData()
+                }}>
+                Unit: {' ' + index}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+    )
+  }
+
   renderSurfacePanel() {
-    let agentsX = this.props.agents.map(v => v.x)
-    let agentsY = this.props.agents.map(v => v.y)
-    let agentsZ = this.props.agents.map(v => v.z)
-    let agentxMaxZ = this.props.agents.map(v => this.state.maxZ)
+    // let agentsX = this.props.agents.map(v => v.x)
+    // let agentsY = this.props.agents.map(v => v.y)
+    // let agentsZ = this.props.agents.map(v => v.z)
+    let agentxMaxZ = this.state.swarm.map(v => this.state.maxZ)
 
     let dataLayers = []
 
@@ -61,9 +119,9 @@ class Visualization extends Component {
 
     if(this.state.show3dPoints) {
       dataLayers.push({
-        x: agentsX,
-        y: agentsY,
-        z: agentsZ,
+        x: this.state.swarm.map(v => v.args[0]),
+        y: this.state.swarm.map(v => v.args[1]),
+        z: this.state.swarm.map(v => v.fitScore),
         type: 'scatter3d',
         mode: 'markers',
         marker: {
@@ -74,8 +132,8 @@ class Visualization extends Component {
 
     if(this.state.showTopPoints) {
       dataLayers.push({
-        x: agentsX,
-        y: agentsY,
+        x: this.state.swarm.map(v => v.args[0]),
+        y: this.state.swarm.map(v => v.args[1]),
         z: agentxMaxZ,
         type: 'scatter3d',
         mode: 'markers',
@@ -89,7 +147,7 @@ class Visualization extends Component {
       <div>
         <Plot
           data={dataLayers}
-          layout={{width: this.props.width || 1000, height: this.props.height || 1000, title: 'Visualization'}}
+          layout={{width: this.props.width || 600, height: this.props.height || 600, title: 'Visualization'}}
         />
       </div>
     )

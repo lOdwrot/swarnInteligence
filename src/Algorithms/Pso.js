@@ -12,17 +12,17 @@ export default class PSO {
   }
 
   start(dimmensions, initedValueBorders, examFunction, particles = 10) {
-    this.init(dimmensions, particles, initedValueBorders)
+    this.init(dimmensions, particles, initedValueBorders, examFunction)
   }
 
-  init(dimmensions, particles, initedValueBorders) {
+  init(dimmensions, particles, initedValueBorders, examFunction) {
     this.swarm = []
     for(let x = 0; x < particles; x++) {
-      let particle = []
+      let args = []
       for(let i = 0; i < dimmensions; i++) {
-        particle.push(Math.random() * (initedValueBorders[1] - initedValueBorders[0]) + initedValueBorders[0])
+        args.push(Math.random() * (initedValueBorders[1] - initedValueBorders[0]) + initedValueBorders[0])
       }
-      this.swarm.push(particle)
+      this.swarm.push({args: args, fitScore: examFunction(args)})
     }
   }
 }
