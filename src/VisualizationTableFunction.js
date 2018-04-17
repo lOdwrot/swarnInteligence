@@ -2,23 +2,35 @@ import React, { Component } from 'react'
 import _ from 'lodash'
 import * as TableData from './TestFunctions.js'
 import TextField from 'material-ui/TextField'
+import Input, { InputLabel } from 'material-ui/Input';
+import { MenuItem } from 'material-ui/Menu';
+import { FormControl, FormHelperText } from 'material-ui/Form';
+import Select from 'material-ui/Select';
+import PSO from './Algorithms/Pso.js'
 
-const canvasSideSize = 600
-const canvasOffset = 100
+const canvasSideSize = 400
+const canvasOffset = 50
 const unit = canvasSideSize / TableData.roomDimmensions[0]
-
-
 
 export default class VisualizationTable extends Component {
   constructor(props) {
     super(props)
-    this.state = {furnitures: [], score: 0}
 
+    this.state = {furnitures: [], score: 0, selectedAlghoritm: 'pso', swarm: []}
+    this.alghorith = new PSO()
+
+    this.updateSwarmData = this.updateSwarmData.bind(this)
     setTimeout(() => this.updateFurnituresState(TableData.getRandomizedFurnitures()), 100)
   }
 
+
+
   componentDidMount() {
     this.updateCanvas([])
+  }
+
+  updateSwarmData() {
+    this.setState({swarm: this.alghorith.getSwarm()})
   }
 
   updateCanvas(furnitures) {
@@ -47,36 +59,41 @@ export default class VisualizationTable extends Component {
     }
   }
 
-  updateFurnituresState(furnitures) {
-    let args = []
-    furnitures.forEach(v => {
-      args.push(v.x)
-      args.push(v.y)
-    })
+  updateFurnituresState(furnitures, args = []) {
+    if(_.isEmpty(args)) {
+      furnitures.forEach(v => {
+        args.push(v.x)
+        args.push(v.y)
+      })
+    }
+
     this.setState({furnitures: furnitures, score: TableData.roomFunction(args, furnitures)})
     this.updateCanvas(furnitures)
   }
 
   render() {
     return (
-      <div style={{display: 'flex'}}>
-        <div>
+      <div>
+        <div style={{display: 'flex'}}>
           <div>
-            {`Score: ${this.state.score}`}
+            <div>
+              {`Score: ${this.state.score}`}
+            </div>
+            <div>
+              {this.renderInputs()}
+            </div>
           </div>
           <div>
-            {this.renderInputs()}
+            {this.renderRoom()}
           </div>
         </div>
-        <div>
-          {this.renderRoom()}
-        </div>
+        {this.renderSwarmSection()}
       </div>
     )
   }
 
   renderRoom() {
-    return (<canvas ref="canvas"  width={800} height={800}/>)
+    return (<canvas ref="canvas"  width={canvasSideSize + 2 * canvasOffset} height={canvasSideSize + 2 * canvasOffset}/>)
   }
 
   renderInputs() {
@@ -99,5 +116,51 @@ export default class VisualizationTable extends Component {
         }}/>
       </div>
     ))
+  }
+
+  renderSwarmSection() {
+    return (
+      <div>
+        <div>
+          <div>
+            <FormControl style={{width: '200px'}}>
+              <InputLabel htmlFor="age-native-simple">Swarm type</InputLabel>
+              <Select
+                value={this.state.selectedAlghoritm}
+                onChange={(event) => this.setState({selectedAlghoritm: event.target.value})}
+                input={<Input name="age" id="age-helper" />}
+                >
+                  <MenuItem value={'pso'}>PSO</MenuItem>
+                  <MenuItem value={'fireFly'}>Fire Fly</MenuItem>
+                  <MenuItem value={'bee'}>Bee</MenuItem>
+                </Select>
+                <button onClick={() => {
+                  this.alghorith.start(this.state.furnitures.length * 2, [0, TableData.roomDimmensions[0]])
+                  this.updateSwarmData()
+                }}>
+                  Start Alghoritm
+                </button>
+                <button onClick={this.updateSwarmData}>
+                  Update swarm data
+                </button>
+            </FormControl>
+          </div>
+          {
+            !_.isEmpty(this.state.swarm) &&
+            this.state.swarm.map((v, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  console.log(v)
+                  this.updateFurnituresState(this.state.furnitures, v)
+                }}>
+                Unit: {' ' + index}
+              </button>
+            ))
+          }
+        </div>
+
+      </div>
+    )
   }
 }

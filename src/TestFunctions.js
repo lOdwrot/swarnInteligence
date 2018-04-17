@@ -10,6 +10,7 @@ export const FT_TV = 'tv'
 export const FT_TABLE = 'table'
 export const FT_LOCKER = 'locker'
 export const FT_CHAIR = 'chair'
+const maxTvSofaAngle = 0.524
 
 export const roomDimmensions = [20, 20]
 export const doors = {x: 1, y: 0, xW: 1, yW: 1}
@@ -95,6 +96,14 @@ export const roomFunction = (inputArgs = [], _furnitures=furnitures) => {
   // count base score
   let baseScore = countDistanceFromCentrum([..._furnitures].sort((v1, v2) => countDistanceFromCentrum(v1) - countDistanceFromCentrum(v2)).find(v => !v.canStandOnCarpet))
 
+  //check tv angle sofa
+  let mTv = _furnitures.find(v => v.type == FT_TV)
+  let mSofa = _furnitures.find(v => v.type == FT_SOFA)
+  let a = Math.abs(mTv.x - mSofa.x)
+  let b = Math.abs(mTv.y - mSofa.y)
+  // let c = Math.sqrt(Math.pow(a, 2), Math.pow(b, 2))
+  if((b >= a && Math.atan2(a, b) < maxTvSofaAngle) || (b < a && Math.atan2(b, a) < maxTvSofaAngle)) baseScore += 15
+
   // violation points
   let violationPoints = 0
   _furnitures.forEach((v, index) => {
@@ -139,6 +148,8 @@ export const roomFunction = (inputArgs = [], _furnitures=furnitures) => {
 
   console.log('Base score: ' + baseScore)
   console.log('Violation points: ' + violationPoints)
+
+
 
   return baseScore - violationPoints
 }
