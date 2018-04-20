@@ -12,7 +12,7 @@ const mTestFun = ackleyFunction()
 class App extends Component {
   constructor(props) {
     super(props)
-    this.state = {selectedView: 'room'}
+    this.state = {selectedView: '3dFunction'}
   }
 
   render() {

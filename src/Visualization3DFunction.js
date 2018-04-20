@@ -1,3 +1,4 @@
+import diff from 'deep-diff'
 import React, { Component } from 'react'
 import _ from 'lodash'
 import {
@@ -23,11 +24,22 @@ class Visualization extends Component {
     let surface = this.generateSurface()
     let maxZ = Math.max.apply(Math, _.flatten(surface.z))
 
+    this.updateSwarmData = this.updateSwarmData.bind(this)
     this.alghorithm = new PSO()
     this.state = {surface: this.generateSurface(), maxZ: maxZ, showSurface: true, showTopPoints: true, show3dPoints: true, selectedAlghoritm: 'pso', swarm: [], swarmSize: 10}
+    this.swarmUpdateInterval = null
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return !_.isEmpty(diff(this.state, nextState))
+  }
+
+  componentWillUnmount() {
+    if(this.swarmUpdateInterval) clearInterval(this.swarmUpdateInterval)
   }
 
   updateSwarmData() {
+    console.log('Updating swarm data')
     this.setState({swarm: this.alghorithm.getSwarm()})
   }
 
@@ -70,8 +82,9 @@ class Visualization extends Component {
                 <input type='number' onChange={(event)=> this.setState({swarmSize: Number(event.target.value)})} value={Number(this.state.swarmSize)}/>
                 <button onClick={() => console.log(this.state.swarm)}>Log swarm</button>
                 <button onClick={() => {
-                  this.alghorithm.start(2, [-5, 5], this.props.visFun, this.state.swarmSize)
+                  this.alghorithm.start(2, [-50, 50], this.props.visFun, this.state.swarmSize)
                   this.updateSwarmData()
+                  // this.swarmUpdateInterval = setInterval(this.updateSwarmData, 100)
                 }}>
                   Start Alghoritm
                 </button>
@@ -80,19 +93,6 @@ class Visualization extends Component {
                 </button>
             </FormControl>
           </div>
-          {
-            !_.isEmpty(this.state.swarm) &&
-            this.state.swarm.map((v, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  console.log(v)
-                  this.updateSwarmData()
-                }}>
-                Unit: {' ' + index}
-              </button>
-            ))
-          }
         </div>
       </div>
     )

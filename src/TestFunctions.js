@@ -7,11 +7,11 @@ export const ackleyFunction  = (a = 20, b = 0.2, c = 2 * Math.PI, d = 2) => (x, 
     arg1 = x
     arg2 = y
   }
-  return -a * Math.exp(
+  return -(-a * Math.exp(
       -b * Math.sqrt(1/d * (Math.pow(arg1, 2) + Math.pow(arg2, 2)))
     ) - Math.exp(
       1/d + (Math.cos(c*arg1) + Math.cos(c*arg2))
-    ) + a + Math.exp(1)
+    ) + a + Math.exp(1))
 }
 
 
@@ -24,7 +24,7 @@ const maxTvSofaAngle = 0.524
 
 export const roomDimmensions = [20, 20]
 export const doors = {x: 1, y: 0, xW: 1, yW: 1}
-export const mWindow = {x: 10, y: 0, xW: 5, yW: 2}
+export const mWindow = {x: 0, y: 10, xW: 2, yW: 5}
 
 const buildFurniture = (xW, yW, type, canStandOnCarpet, color) => ({
     x: 0,
@@ -48,10 +48,10 @@ export const getRandomizedFurnitures = () => {
 
 export const furnitures = [
   buildFurniture(5, 1, FT_TV, false, "#6600cc"),
-  buildFurniture(6, 2, FT_SOFA, true, "#cc00ff"),
+  buildFurniture(6, 2, FT_SOFA, false, "#cc00ff"),
   buildFurniture(3, 2, FT_LOCKER, false, "#0066ff"),
   buildFurniture(3, 2, FT_LOCKER, false, "#339966"),
-  buildFurniture(2, 2, FT_CHAIR, true, "#00cc66"),
+  buildFurniture(3, 2, FT_LOCKER, false, "#00cc66"),
   buildFurniture(2, 2, FT_CHAIR, true, "#ccff66"),
   buildFurniture(2, 2, FT_CHAIR, true, "#ffcc00"),
   buildFurniture(2, 2, FT_CHAIR, true, "#ff0000"),
@@ -112,31 +112,34 @@ export const roomFunction = (inputArgs = [], _furnitures=furnitures) => {
   let a = Math.abs(mTv.x - mSofa.x)
   let b = Math.abs(mTv.y - mSofa.y)
   // let c = Math.sqrt(Math.pow(a, 2), Math.pow(b, 2))
-  if((b >= a && Math.atan2(a, b) < maxTvSofaAngle) || (b < a && Math.atan2(b, a) < maxTvSofaAngle)) baseScore += 15
+  if(Math.sign(mTv.xW - mTv.yW) == Math.sign(mSofa.xW - mSofa.yW) &&
+      ((b >= a && Math.atan2(a, b) < maxTvSofaAngle && Math.sign(mSofa.xW - mSofa.yW) == 1) ||
+      (b < a && Math.atan2(b, a) < maxTvSofaAngle) && Math.sign(mSofa.xW - mSofa.yW) == -1)
+    ) baseScore += 25
 
   // violation points
   let violationPoints = 0
   _furnitures.forEach((v, index) => {
     if(v.x + v.xW / 2 > roomDimmensions[0]) {
-      console.log('Object out of room in X: ' + v.type)
+      // console.log('Object out of room in X: ' + v.type)
       violationPoints = violationPoints + 1 + v.x + v.xW / 2 - roomDimmensions[0]
     } else if (v.x - v.xW  / 2 < 0){
-      console.log('Object out of room in X: ' + v.type)
+      // console.log('Object out of room in X: ' + v.type)
       violationPoints = violationPoints + 1 + Math.abs(v.x - v.xW )
     }
 
     if(v.y + v.yW / 2 > roomDimmensions[0]) {
-      console.log('Object out of room in X: ' + v.type)
+      // console.log('Object out of room in X: ' + v.type)
       violationPoints = violationPoints + 1 + v.y + v.yW / 2 - roomDimmensions[0]
     } else if (v.y - v.yW  / 2 < 0){
-      console.log('Object out of room in X: ' + v.type)
+      // console.log('Object out of room in X: ' + v.type)
       violationPoints = violationPoints + 1 + Math.abs(v.y - v.yW )
     }
 
     _furnitures.forEach((v2, index2) => {
       if(index2 <= index) return
       if(colides(v, v2)) {
-        console.log('Colision between objects: ' + v.type + ' ' + v2.type)
+        // console.log('Colision between objects: ' + v.type + ' ' + v2.type)
         violationPoints++
       }
     })
@@ -144,20 +147,20 @@ export const roomFunction = (inputArgs = [], _furnitures=furnitures) => {
   //doors and window
   _furnitures.forEach(v => {
     if(colides(v, doors)) {
-      console.log('Colision between objects: ' + v.type + ' ' + 'doors')
+      // console.log('Colision between objects: ' + v.type + ' ' + 'doors')
       violationPoints++
     }
     if(colides(v, mWindow)) {
-      console.log('Colision between objects: ' + v.type + ' ' + 'window')
+      // console.log('Colision between objects: ' + v.type + ' ' + 'window')
       violationPoints++
     }
   })
 
 
-  violationPoints *= 2
+  violationPoints *= 7
 
-  console.log('Base score: ' + baseScore)
-  console.log('Violation points: ' + violationPoints)
+  // console.log('Base score: ' + baseScore)
+  // console.log('Violation points: ' + violationPoints)
 
 
 

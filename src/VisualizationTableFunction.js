@@ -149,6 +149,15 @@ export default class VisualizationTable extends Component {
           </div>
           {
             !_.isEmpty(this.state.swarm) &&
+            <button onClick={() => {
+              console.log(this.alghorith.getBest().args)
+              this.updateFurnituresState(this.state.furnitures, this.alghorith.getBest().args)
+            }}>
+              Best
+            </button>
+          }
+          {
+            !_.isEmpty(this.state.swarm) &&
             this.state.swarm.map((v, index) => (
               <button
                 key={index}
