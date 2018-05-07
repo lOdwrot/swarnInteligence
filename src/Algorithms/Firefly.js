@@ -2,15 +2,17 @@
 import _ from 'lodash'
 
 const iterations = 1000
-const param1 = 0.01
-const param2 = 0.05
+const param1 = 0.2
+const param2 = 0.1
 
-const absorptionCoefficient = 0.5
+const paramBestRandom = 3
+const absorptionCoefficient = 0.95
 const fitScoreMultiplayer = 2
-const paramToAnother = 0.5
+const paramToAnother = 0.3
 
-export default class PSO {
+export default class FireFly {
   constructor() {
+    // console.log('FireFly created')
     this.swarm = []
     this.bestUnit = {fitScore: -10000}
   }
@@ -24,6 +26,7 @@ export default class PSO {
   }
 
   start(dimmensions, initedValueBorders, examFunction, particles = 10) {
+    // console.log('Started...')
     this.init(dimmensions, particles, initedValueBorders, examFunction)
   }
 
@@ -56,27 +59,26 @@ export default class PSO {
     this.updateBestSwarmStats()
 
     let i = 0
-    // let interval = setInterval(
-    //   () => {
-    //     if(i++ < iterations) this.particlesRoutine()
-    //     else clearInterval(interval)
-    //   }, 10
-    // )
-    while (i++ < iterations) this.particlesRoutine()
+    while (i++ < iterations) this.fireFlyRoutine()
+    console.log(this.getBest())
   }
 
-  particlesRoutine() {
+  fireFlyRoutine() {
     this.swarm.forEach(particle => {
-      let bestNearest = getBestNearestParticel(particle)
+      let bestNearest = this.getBestNearestParticel(particle)
 
       for(let d = 0; d < this.dimmensions; d++) {
         let rp = Math.random()
+        let rr = Math.random() * (Math.random() < 0.5 ? 1 : -1)
 
         // calculate velocity
         let velocity = (
           param1 * particle.velocity[d] +
           param2 * rp * (particle.bestArgs[d] - particle.args[d]) +
-          (bestNearest.isBetter ? paramToAnother * (bestNearest.particle.args[d] - particle.args[d]) : 0)
+          (bestNearest.isBetter ?
+            (paramToAnother * (bestNearest.particle.args[d] - particle.args[d])) :
+            rr * paramBestRandom
+          )
         )
 
         // update particle data in single dimmension
@@ -101,7 +103,7 @@ export default class PSO {
     this.swarm.forEach(v => {
       if(v == particle) return
       let distance = 0
-      for(d in particle.args) distance += Math.abs(v.args[d] - particle.args[d])
+      for(let d in particle.args) distance += Math.abs(v.args[d] - particle.args[d])
       let attractiveness = Math.exp(-absorptionCoefficient * distance) + fitScoreMultiplayer * v.fitScore
 
       if(attractiveness > bestAttractiveness) {
@@ -119,9 +121,9 @@ export default class PSO {
   updateBestSwarmStats() {
     let bestParticle = this.swarm.reduce((v, acc) => v.fitScore > acc.bestFitScore ? v : acc, this.bestUnit)
     if(bestParticle.fitScore > this.bestUnit.fitScore) {
-      console.log('Firefly found new best particle:')
+      // console.log('Firefly found new best particle:')
       this.bestUnit = _.cloneDeep(bestParticle)
-      console.log(this.bestUnit)
+      // console.log(this.bestUnit)
     }
   }
 }

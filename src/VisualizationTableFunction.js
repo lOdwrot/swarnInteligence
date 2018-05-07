@@ -7,6 +7,8 @@ import { MenuItem } from 'material-ui/Menu';
 import { FormControl, FormHelperText } from 'material-ui/Form';
 import Select from 'material-ui/Select';
 import PSO from './Algorithms/Pso.js'
+import FireFly from './Algorithms/Firefly.js'
+import {roomFunction} from './TestFunctions.js'
 
 const canvasSideSize = 400
 const canvasOffset = 50
@@ -17,7 +19,7 @@ export default class VisualizationTable extends Component {
     super(props)
 
     this.state = {furnitures: [], score: 0, selectedAlghoritm: 'pso', swarm: [], swarmSize: 10}
-    this.alghorith = new PSO()
+    this.alghorithm = new PSO()
 
     this.updateSwarmData = this.updateSwarmData.bind(this)
     setTimeout(() => this.updateFurnituresState(TableData.getRandomizedFurnitures()), 100)
@@ -30,10 +32,10 @@ export default class VisualizationTable extends Component {
   }
 
   updateSwarmData() {
-    this.setState({swarm: this.alghorith.getSwarm()})
+    this.setState({swarm: this.alghorithm.getSwarm()})
   }
 
-  updateCanvas(furnitures) {
+  updateCanvas(furnitures, carpetSize = 0) {
         const canvas = this.refs.canvas
         const ctx = canvas.getContext('2d')
         ctx.lineWidth = 3
@@ -41,6 +43,12 @@ export default class VisualizationTable extends Component {
         ctx.clearRect(0, 0, 800, 800);
         ctx.beginPath()
         ctx.rect(canvasOffset, canvasOffset, TableData.roomDimmensions[0] * unit, TableData.roomDimmensions[1] * unit)
+        // ctx.arc(
+        //   canvasOffset + TableData.roomDimmensions[0] * unit / 2,
+        //   canvasOffset + TableData.roomDimmensions[0] * unit / 2,
+        //   50,
+        //   carpetSize,
+        //   2 * Math.PI)
 
         this.drawObjOnCanvas(ctx, {x: TableData.roomDimmensions[0] / 2, y: TableData.roomDimmensions[1] / 2, xW: 1, yW: 1}, "#000000")
         this.drawObjOnCanvas(ctx, TableData.doors, "#336699")
@@ -68,7 +76,7 @@ export default class VisualizationTable extends Component {
     }
 
     this.setState({furnitures: furnitures, score: TableData.roomFunction(args, furnitures)})
-    this.updateCanvas(furnitures)
+    this.updateCanvas(furnitures, window.baseScore)
   }
 
   render() {
@@ -118,6 +126,8 @@ export default class VisualizationTable extends Component {
     ))
   }
 
+
+
   renderSwarmSection() {
     return (
       <div>
@@ -127,7 +137,9 @@ export default class VisualizationTable extends Component {
               <InputLabel htmlFor="age-native-simple">Swarm type</InputLabel>
               <Select
                 value={this.state.selectedAlghoritm}
-                onChange={(event) => this.setState({selectedAlghoritm: event.target.value})}
+                onChange={(event) => {
+                    this.setState({selectedAlghoritm: event.target.value})
+                  }}
                 input={<Input name="age" id="age-helper" />}
                 >
                   <MenuItem value={'pso'}>PSO</MenuItem>
@@ -137,10 +149,55 @@ export default class VisualizationTable extends Component {
                 <input type='number' onChange={(event)=> this.setState({swarmSize: Number(event.target.value)})} value={Number(this.state.swarmSize)}/>
                 <button onClick={() => console.log(this.state.swarm)}>Log swarm</button>
                 <button onClick={() => {
-                  this.alghorith.start(this.state.furnitures.length * 2, [0, TableData.roomDimmensions[0]], TableData.roomFunction, this.state.swarmSize)
+                  if(this.state.selectedAlghoritm == 'pso') this.alghorithm = new PSO()
+                  else if(this.state.selectedAlghoritm == 'fireFly') this.alghorithm = new FireFly()
+                  else console.error('Algorithmnot implemented yet: ' + this.state.selectedAlghoritm)
+
+                  this.alghorithm.start(this.state.furnitures.length * 2, [0, TableData.roomDimmensions[0]], roomFunction, this.state.swarmSize)
                   this.updateSwarmData()
                 }}>
                   Start Alghoritm
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('Started benchmark')
+
+                    let results = {}
+                    let sizes = [10, 20, 50, 75, 100]
+
+
+                    let iterations = 5
+
+
+                    sizes.forEach(v => {
+                      let fitScore = 0
+                      let startTime = (new Date()).getTime()
+                      for(let i = 0; i < iterations; i++) {
+
+                        if(this.state.selectedAlghoritm == 'pso') this.alghorithm = new PSO()
+                        else if(this.state.selectedAlghoritm == 'fireFly') this.alghorithm = new FireFly()
+                        else console.error('Algorithmnot implemented yet: ' + this.state.selectedAlghoritm)
+
+                        this.alghorithm.start(this.state.furnitures.length * 2, [0, TableData.roomDimmensions[0]], roomFunction, v)
+
+                        fitScore += this.alghorithm.getBest().fitScore
+
+                      }
+                      let endTime = (new Date()).getTime()
+                      fitScore = fitScore / iterations
+                      let executionTime = (endTime - startTime) / (iterations * 1000)
+                      console.log('Time: ')
+                      console.log(executionTime)
+                      console.log('Fit Score: ')
+                      console.log(fitScore)
+                      results[v] = {
+                        executionTime: executionTime,
+                        fitScore: fitScore
+                      }
+                    })
+                    console.log(results)
+                  }}>
+                  Benchmark
                 </button>
                 <button onClick={this.updateSwarmData}>
                   Update swarm data
@@ -150,8 +207,8 @@ export default class VisualizationTable extends Component {
           {
             !_.isEmpty(this.state.swarm) &&
             <button onClick={() => {
-              console.log(this.alghorith.getBest().args)
-              this.updateFurnituresState(this.state.furnitures, this.alghorith.getBest().args)
+              console.log(this.alghorithm.getBest().args)
+              this.updateFurnituresState(this.state.furnitures, this.alghorithm.getBest().args)
             }}>
               Best
             </button>

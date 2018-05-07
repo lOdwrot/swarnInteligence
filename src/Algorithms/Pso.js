@@ -2,9 +2,9 @@
 import _ from 'lodash'
 
 const iterations = 1000
-const param1 = 0.1
-const param2 = 0.5
-const param3 = 0.005
+const param1 = 0.15
+const param2 = 0.25
+const param3 = 0.01
 
 export default class PSO {
   constructor() {
@@ -53,12 +53,6 @@ export default class PSO {
     this.updateBestSwarmStats()
 
     let i = 0
-    // let interval = setInterval(
-    //   () => {
-    //     if(i++ < iterations) this.particlesRoutine()
-    //     else clearInterval(interval)
-    //   }, 10
-    // )
     while (i++ < iterations) this.particlesRoutine()
   }
 
@@ -94,9 +88,7 @@ export default class PSO {
   updateBestSwarmStats() {
     let bestParticle = this.swarm.reduce((v, acc) => v.fitScore > acc.bestFitScore ? v : acc, this.bestUnit)
     if(bestParticle.fitScore > this.bestUnit.fitScore) {
-      console.log('Particle found new best particle:')
       this.bestUnit = _.cloneDeep(bestParticle)
-      console.log(this.bestUnit)
     }
   }
 }

@@ -13,6 +13,7 @@ import Input, { InputLabel } from 'material-ui/Input';
 import { MenuItem } from 'material-ui/Menu';
 import Select from 'material-ui/Select';
 import PSO from './Algorithms/Pso.js'
+import FireFly from './Algorithms/Firefly.js'
 import Plot from 'react-plotly.js'
 
 const halfSquara = 5
@@ -72,7 +73,9 @@ class Visualization extends Component {
               <InputLabel htmlFor="age-native-simple">Swarm type</InputLabel>
               <Select
                 value={this.state.selectedAlghoritm}
-                onChange={(event) => this.setState({selectedAlghoritm: event.target.value})}
+                onChange={(event) => {
+                  this.setState({selectedAlghoritm: event.target.value})
+                }}
                 input={<Input name="age" id="age-helper" />}
                 >
                   <MenuItem value={'pso'}>PSO</MenuItem>
@@ -82,11 +85,51 @@ class Visualization extends Component {
                 <input type='number' onChange={(event)=> this.setState({swarmSize: Number(event.target.value)})} value={Number(this.state.swarmSize)}/>
                 <button onClick={() => console.log(this.state.swarm)}>Log swarm</button>
                 <button onClick={() => {
+                  if(this.state.selectedAlghoritm == 'pso') this.alghorithm = new PSO()
+                  else if(this.state.selectedAlghoritm == 'fireFly') this.alghorithm = new FireFly()
+                  else console.error('Algorithmnot implemented yet: ' + this.state.selectedAlghoritm)
+
                   this.alghorithm.start(2, [-50, 50], this.props.visFun, this.state.swarmSize)
                   this.updateSwarmData()
                   // this.swarmUpdateInterval = setInterval(this.updateSwarmData, 100)
                 }}>
                   Start Alghoritm
+                </button>
+
+                <button
+                  onClick={() => {
+                    console.log('Started benchmark')
+                    let results = {}
+                    let sizes = [10, 20, 50, 75, 100]
+                    sizes.forEach(v => {
+                      let startTime = (new Date()).getTime()
+                      let iterations = 10
+                      let fitScore = 0
+                      for(let i = 0; i < iterations; i++) {
+                        if(this.state.selectedAlghoritm == 'pso') this.alghorithm = new PSO()
+                        else if(this.state.selectedAlghoritm == 'fireFly') this.alghorithm = new FireFly()
+                        else console.error('Algorithmnot implemented yet: ' + this.state.selectedAlghoritm)
+                        this.alghorithm.start(2, [-50, 50], this.props.visFun, this.state.swarmSize)
+
+                        fitScore += this.alghorithm.getBest().fitScore
+                        // console.log('Partial sum: ' + this.alghorithm.getBest().fitScore)
+                        this.alghorithm.start(2, [-50, 50], this.props.visFun, v)
+                      }
+                      let endTime = (new Date()).getTime()
+                      fitScore = fitScore / iterations
+                      let executionTime = (endTime - startTime) / (iterations * 1000)
+                      console.log('Time: ')
+                      console.log(executionTime)
+                      console.log('Fit Score: ')
+                      console.log(fitScore)
+                      results[v] = {
+                        executionTime: executionTime,
+                        fitScore: fitScore
+                      }
+                    })
+                    console.log(results)
+                  }}>
+                  Benchmark
                 </button>
                 <button onClick={this.updateSwarmData}>
                   Update swarm data
